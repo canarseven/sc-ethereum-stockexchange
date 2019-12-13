@@ -6,8 +6,7 @@ import './Security.sol';
 
 contract PostTradeV2 {
 
-    bytes32 seHash = 0x2cd2f6d41776603d9d1b4527217a2b9540dda145afa56db5e49ae0bc9457da6e;
-    address owner;
+    address owner;  // the owner address should be the account of the stock exchange node
 
 
     uint orderID;
@@ -36,8 +35,7 @@ contract PostTradeV2 {
 
 
     constructor() public{
-        bytes32 myAddress = keccak256(abi.encodePacked(msg.sender));
-        require(myAddress == seHash);
+        owner = msg.sender;
     }
 
 
@@ -50,8 +48,7 @@ contract PostTradeV2 {
 
 
     function createStock(uint256 _totalAmount, string memory _tokenName, string memory _tokenSymbol) public {
-        bytes32 myAddress = keccak256(abi.encodePacked(msg.sender));
-        require(myAddress == seHash);
+        require(msg.sender == owner);
         Security token = new Security(msg.sender, _totalAmount, _tokenName, _tokenSymbol);
         tradableStocks[_tokenSymbol] = token;
 
