@@ -18,7 +18,7 @@
  *
  */
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const mnemonic = "YOUR MNEMONIC";
+const mnemonic = "burden tell any horn settle detail tuna sun friend brown youth odor";
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
@@ -50,7 +50,7 @@ module.exports = {
     // I worked on Kaleido, pick any name instead of 'kaleido' you want
     kaleido: {
       provider: function() {
-        return new HDWalletProvider(mnemonic, `YOUR_ENDPOINT_URL`)
+        return new HDWalletProvider(mnemonic, 'https://e0e0p5rq3u:qET2EmWaZP7Y2FgN2DqYdYg3ENS23WyRIe-DVSkbIx0@e0c2z3db7u-e0j2ahcsy2-rpc.de0-aws.kaleido.io')
       },
       // port: 8777,              // Custom port
       network_id: '*',            // Custom network
