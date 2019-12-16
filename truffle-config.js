@@ -41,11 +41,11 @@ module.exports = {
     // tab if you use this network and you must also set the `host`, `port` and `network_id`
     // options below to some value.
     //
-    // development: {
+    //development: {
     //   host: "127.0.0.1",     // Localhost (default: none)
     //   port: 8545,            // Standard Ethereum port (default: none)
     //   network_id: "*",       // Any network (default: none)
-    // },
+    //},
 
     // I worked on Kaleido, pick any name instead of 'kaleido' you want
     kaleido: {
@@ -63,6 +63,8 @@ module.exports = {
       host: "127.0.0.1",           // Localhost (default: none)
       port: 8545,                  // Standard Ethereum port (default: none)
       network_id: "*",          // Any network (default: none)
+      gas: 8500000,
+      gasPrice: 20000000000,      // 20 gwei (in wei) (default: 100 gwei)
     },
 
     // Another network with more advanced options...
