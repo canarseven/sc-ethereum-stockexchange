@@ -4,7 +4,7 @@ import './Security.sol';
 
 // TODO: OVERHAUL SOLIDITY CODE COMPLETELY -> check for mistakes and push pre final version
 
-contract PostTradeV2 {
+contract StockExchangeV2 {
 
     address owner;  // the owner address should be the account of the stock exchange node
 
@@ -23,7 +23,8 @@ contract PostTradeV2 {
 
 
     struct trader {
-        address HIN;
+        address hin;
+        bool isMember;
     }
 
 
@@ -36,14 +37,15 @@ contract PostTradeV2 {
 
     constructor() public{
         owner = msg.sender;
+        orderID++;
     }
 
 
     function createTrader() public {
         trader storage myTrader = traders[msg.sender];
-        myTrader.HIN = msg.sender;
+        myTrader.hin = msg.sender;
 
-        emit CreatedTrader(myTrader.HIN);
+        emit CreatedTrader(myTrader.hin);
     }
 
 
@@ -58,7 +60,11 @@ contract PostTradeV2 {
 
     //0 = "BUY", 1 = "SELL"
     function createOrder(uint8 _method, string memory _symbol, uint _amount, uint _price, uint _timestamp) public {
+        require(traders[msg.sender].isMember == true);
+
+        //---------------------------------------(orderID, timestamp, method, symbol, amount, price, valid, settled, owner)
         allOrders.push(keccak256(abi.encodePacked(orderID, _timestamp, _method, _symbol, _amount, _price, true, false, msg.sender)));
+
         //uint _id, uint _timestamp, address _owner, string _method, string _symbol, uint _amount, uint _price
         emit CreatedOrder(orderID, _timestamp, msg.sender, _method, _symbol, _amount, _price);
         orderID++;
@@ -72,13 +78,15 @@ contract PostTradeV2 {
 
         require(hashedBuy == allOrders[_BUYid]);
         require(hashedSell == allOrders[_SELLid]);
-        //require(msg.value == _SELLprice * _amount);
+        require(msg.value == _SELLprice * _amount);
 
         Security token = tradableStocks[_symbol];
 
         _SELLowner.transfer(msg.value);
         require(token.transfer(_SELLowner, msg.sender, _amount) == true);
 
+        allOrders[_BUYid] = keccak256(abi.encodePacked(_BUYid, _BUYtimestamp, uint8(0), _symbol, _amount, _SELLprice, true, true, msg.sender));
+        allOrders[_SELLid] = keccak256(abi.encodePacked(_SELLid, _SELLtimestamp, uint8(1), _symbol, _amount, _SELLprice, true, true, _SELLowner));
         mappedPrice[_symbol] = _SELLprice;
 
         emit ProcessedOrder(_BUYid, _SELLid);
