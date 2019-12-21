@@ -1,7 +1,7 @@
-const PostTrade = artifacts.require("PostTradeV2");
+const StockExchange = artifacts.require("StockExchangeV2");
 var BN = web3.utils.BN;
 
-contract("PostTrade Test", async accounts => {
+contract("StockExchange Test", async accounts => {
 
   const wei = 100000;
 
@@ -12,13 +12,16 @@ contract("PostTrade Test", async accounts => {
   let buyTimestamp;
   let sellTimestamp;
 
+  let buyID;
+  let sellID;
+
   let seBalance;
   let traderaBalance;
 
   describe('SETUP', function() {
 
     it("deploys contract & default order", async () => {
-      instance = await PostTrade.deployed();
+      instance = await StockExchange.deployed();
       myAddress = await instance.getMyAddress.call();
       assert.ok(myAddress);
       seBalance = web3.eth.getBalance(myAddress);
@@ -27,22 +30,20 @@ contract("PostTrade Test", async accounts => {
 
 
     it('creates SE', async () => {
-      await instance.createTrader();
-      var trader = await instance.traders.call(myAddress);
-      assert.equal(myAddress, trader);
+      myEvent = await instance.createTrader();
+      assert.equal(myAddress, myEvent.logs[0].args.traderadress);
     });
 
     it('creates traderA', async () => {
-      await instance.createTrader({
+      myEvent = await instance.createTrader({
         from: accounts[1]
       });
-      var trader = await instance.traders.call(accounts[1]);
-      assert.equal(accounts[1], trader);
+      assert.equal(accounts[1], myEvent.logs[0].args.traderadress);
     });
 
     it('creates 100 AAPL stocks', async () => {
       await instance.createStock(100, "Apple", "AAPL");
-      var amount = await instance.getMyStock.call("AAPL");
+      let amount = await instance.getMyStock.call("AAPL");
       assert.equal(100, amount);
     });
   });
@@ -50,8 +51,8 @@ contract("PostTrade Test", async accounts => {
 
   describe('BUY AND SELL', function() {
 
-    it('creates SELL 5(x1000) AAPL', async () => {
-      const orderCreated = await instance.createOrder(1, "AAPL", 5, wei, Date.now());
+    it('SE creates SELL 5(x'+ wei.toString() +') AAPL', async () => {
+      const orderCreated = await instance.createOrder(1, "AAPL", 5, wei, Date.now(), {from: accounts[0]});
       const orderEvent = orderCreated.logs[0];
       sellTimestamp = orderEvent.args.timestamp.toNumber();
       assert.equal(orderEvent.args.owner, accounts[0]);
@@ -59,9 +60,10 @@ contract("PostTrade Test", async accounts => {
       assert.equal(orderEvent.args.method.toNumber(), 1);
       assert.equal(orderEvent.args.amount.toNumber(), 5);
       assert.equal(orderEvent.args.price.toNumber(), wei);
+      sellID = orderEvent.args.id.toNumber();
     });
 
-    it('creates BUY 5(x1000) AAPL', async () => {
+    it('TraderA creates BUY 5(x'+ wei.toString() +') AAPL', async () => {
       const orderCreated = await instance.createOrder(0, "AAPL", 5, wei, Date.now(), {
         from: accounts[1]
       });
@@ -72,16 +74,17 @@ contract("PostTrade Test", async accounts => {
       assert.equal(orderEvent.args.method.toNumber(), 0);
       assert.equal(orderEvent.args.amount.toNumber(), 5);
       assert.equal(orderEvent.args.price.toNumber(), wei);
+      buyID = orderEvent.args.id.toNumber();
     });
 
-    it('cleares BUY&SELL 5(x1000) AAPL', async () => {
-      const orderEvent = await instance.clearOrder(1, "AAPL", 5, buyTimestamp, 0, wei, sellTimestamp, myAddress, {
+    it('settles BUY&SELL 5(x'+ wei.toString() +') AAPL', async () => {
+      const orderEvent = await instance.settleOrder(buyID, "AAPL", 5, buyTimestamp, sellID, sellTimestamp, myAddress, {
         from: accounts[1],
-        value: wei
+        value: (wei * 5)
       });
-      const orderProcessed = orderEvent.logs[0];
-      assert.equal(orderProcessed.args.buyID, 1);
-      assert.equal(orderProcessed.args.sellID, 0);
+      const settledOrder = orderEvent.logs[0];
+      assert.equal(settledOrder.args.buyID.toNumber(), buyID);
+      assert.equal(settledOrder.args.sellID.toNumber(), sellID);
     });
 
   });
@@ -101,7 +104,7 @@ contract("PostTrade Test", async accounts => {
       assert.equal(traderStockAmount.toNumber(), 95);
     });
 
-    it('AAPL latestPrice is wei', async () => {
+    it('AAPL latestPrice is '+ wei.toString(), async () => {
       const latestPrice = await instance.getLastPrice("AAPL");
       assert.equal(latestPrice.toNumber(), wei);
     });
