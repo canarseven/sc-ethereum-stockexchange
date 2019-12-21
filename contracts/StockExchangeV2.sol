@@ -6,27 +6,22 @@ import './Security.sol';
 
 contract StockExchangeV2 {
 
-    address owner;  // the owner address should be the account of the stock exchange node
-
+    address owner;
 
     uint orderID;
 
-
     mapping (string => Security) tradableStocks;
 
-
     event CreatedOrder(uint id, uint timestamp, address owner, uint8 method, string symbol, uint amount, uint price);
-    event ProcessedOrder(uint buyID, uint sellID);
+    event SettledOrder(uint buyID, uint sellID);
     event CreatedTrader(address traderadress);
     event CreatedStock(uint totalAmount, string name, string symbol);
     event InvalidatedOrder(uint id);
-
 
     struct trader {
         address hin;
         bool isMember;
     }
-
 
     mapping (address => trader) public traders;
 
@@ -37,7 +32,7 @@ contract StockExchangeV2 {
 
     constructor() public{
         owner = msg.sender;
-        orderID++;
+        orderID = 0;
     }
 
 
@@ -71,7 +66,7 @@ contract StockExchangeV2 {
     }
 
 
-    function clearOrder(uint _BUYid, string memory _symbol, uint _amount, uint _BUYtimestamp, uint _SELLid, uint _SELLprice, uint _SELLtimestamp, address payable _SELLowner) payable public {
+    function settleOrder(uint _BUYid, string memory _symbol, uint _amount, uint _BUYtimestamp, uint _SELLid, uint _SELLprice, uint _SELLtimestamp, address payable _SELLowner) payable public {
 
         bytes32 hashedBuy = keccak256(abi.encodePacked(_BUYid, _BUYtimestamp, uint8(0), _symbol, _amount, _SELLprice, true, false, msg.sender));
         bytes32 hashedSell = keccak256(abi.encodePacked(_SELLid, _SELLtimestamp, uint8(1), _symbol, _amount, _SELLprice, true, false, _SELLowner));
@@ -89,7 +84,7 @@ contract StockExchangeV2 {
         allOrders[_SELLid] = keccak256(abi.encodePacked(_SELLid, _SELLtimestamp, uint8(1), _symbol, _amount, _SELLprice, true, true, _SELLowner));
         mappedPrice[_symbol] = _SELLprice;
 
-        emit ProcessedOrder(_BUYid, _SELLid);
+        emit SettledOder(_BUYid, _SELLid);
     }
 
     function invalidateOrder(uint orderId, uint8 _method, string memory _symbol, uint _amount, uint _price, uint _timestamp) public {
