@@ -66,6 +66,11 @@ module.exports = {
       gas: 8500000,
       gasPrice: 20000000000,      // 20 gwei (in wei) (default: 100 gwei)
     },
+    test: {
+      host: "127.0.0.1",
+      port: 9545,
+      network_id: "*"
+    }
 
     // Another network with more advanced options...
     // advanced: {
