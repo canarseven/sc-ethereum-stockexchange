@@ -1,5 +1,5 @@
-const PostTrade = artifacts.require("PostTradeV2");
+const StockExchange = artifacts.require("StockExchangeV2");
 
 module.exports = function(deployer) {
-  deployer.deploy(PostTrade);
+  deployer.deploy(StockExchange);
 };
