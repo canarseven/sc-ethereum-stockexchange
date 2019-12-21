@@ -84,7 +84,7 @@ contract StockExchangeV2 {
         allOrders[_SELLid] = keccak256(abi.encodePacked(_SELLid, _SELLtimestamp, uint8(1), _symbol, _amount, _SELLprice, true, true, _SELLowner));
         mappedPrice[_symbol] = _SELLprice;
 
-        emit SettledOder(_BUYid, _SELLid);
+        emit SettledOrder(_BUYid, _SELLid);
     }
 
     function invalidateOrder(uint orderId, uint8 _method, string memory _symbol, uint _amount, uint _price, uint _timestamp) public {
