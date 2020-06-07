@@ -1,7 +1,7 @@
 {
-  "name": "posttradev2",
+  "name": "sc-ethereum-stockexchange",
   "version": "1.0.0",
-  "description": "PostTrade Version 2",
+  "description": "## The 'Ethereum StockExchange' Project",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
@@ -9,10 +9,19 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canarseven/sc-ethereum-stockexchange.git"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/canarseven/sc-ethereum-stockexchange/issues"
+  },
+  "homepage": "https://github.com/canarseven/sc-ethereum-stockexchange#readme",
   "dependencies": {
-    "@truffle/hdwallet-provider": "^1.0.23"
+    "@hyperledger/caliper-cli": "^0.3.0",
+    "web3": "^1.2.0"
   }
 }

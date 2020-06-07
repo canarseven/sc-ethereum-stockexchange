@@ -1,0 +1,52 @@
+---
+test:
+  name: ethexchange
+  description: Config for the Ethereum Exchange Smart Contract
+  workers:
+    type: local
+    number: 1
+  rounds:
+  - label: query
+    description: Test description for the opening of an account through the deployed chaincode
+    txNumber: 1
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 1
+    arguments:
+      money: 10000
+      securities: 1
+    callback: benchmarks/querySecurities.js
+  - label: create buy order
+    description: Test description for the opening of an account through the deployed chaincode
+    txNumber: 500
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 50
+    arguments:
+      money: 10000
+      symbol: "AAPL"
+      quantity: 1
+      price: 2
+    callback: benchmarks/createBuyOrders.js
+  - label: create sell order
+    description: Test description for the opening of an account through the deployed chaincode
+    txNumber: 500
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 50
+    arguments:
+      money: 10000
+      symbol: "AAPL"
+      quantity: 1
+      price: 2
+    callback: benchmarks/createSellOrders.js
+monitor:
+  type:
+  - docker
+  docker:
+    name:
+    - all
+  interval: 1
