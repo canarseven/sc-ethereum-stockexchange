@@ -43,6 +43,19 @@ test:
       quantity: 1
       price: 2
     callback: benchmarks/createSellOrders.js
+  - label: settle order
+    description: Test description for the opening of an account through the deployed chaincode
+    txNumber: 500
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 50
+    arguments:
+      money: 10000
+      symbol: "AAPL"
+      quantity: 1
+      price: 2
+    callback: benchmarks/settleOrders.js
 monitor:
   type:
   - docker

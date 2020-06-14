@@ -16,12 +16,25 @@ var buyTimestamps = [];
 
 var buyOrders = [];
 
+var orderId = 0;
+
+var myHin;
+
 module.exports.init = async function(blockchain, context, args) {
     bc = blockchain;
     ctx = context;
     clientArgs = args;
     //clientIdx = context.clientIdx.toString();
-
+	
+	var myArgs = {
+        verb: 'getMyAddress',
+        args: []
+    };
+	var hinTx = await bc.querySmartContract(ctx, contractID, version, myArgs);
+	console.log(hinTx);
+	var hin = hinTx[0].status.result.toString('utf8');
+	console.log(hin);
+	myHin = hin;
     return Promise.resolve();
 };
 
@@ -46,10 +59,23 @@ module.exports.run = function() {
 
     var myArgs = {
         verb: 'createOrder',
-        args: ['0', symbol, quantity, price, buyTimestamp]
+        args: ["KB"+orderId.toString(), '0', symbol, quantity, price, buyTimestamp]
     };
+	let orderObject = {
+                    "orderId": "KB"+orderId.toString(),
+                    "symbol": symbol,
+                    "quantity": quantity,
+                    "price": price,
+                    "method": "0",
+                    "timestamp": buyTimestamp,
+                    "valid": "true",
+                    "processed": "false",
+                    "traderHin": myHin
+    };
+	buyOrders.push(orderObject);
     try {
         //console.log(`${clientIdx} BUYING ${quantity} ${symbol}@${price}€`);
+		orderId++;
         return bc.invokeSmartContract(ctx, contractID, version, myArgs);
     } catch (error) {
         return console.log(`BUYORDER ${error}`);
@@ -63,64 +89,6 @@ async function asyncForEach(array, callback) {
 }
 
 module.exports.end = async function() {
-    /*const symbol = clientArgs.symbol;
-
-    const quantity = clientArgs.quantity;
-    const price = clientArgs.price;
-
-    //get traderHin
-    var myArgs = {
-        chaincodeFunction: 'getMyHin',
-        chaincodeArguments: []
-    };
-    var myHinTx = await bc.bcObj.querySmartContract(ctx, contractID, version, myArgs);
-    var myHin = myHinTx[0].status.result.toString('utf8')
-    console.log(myHin);
-
-    var myArgs = {
-        chaincodeFunction: 'getAllOrders',
-        chaincodeArguments: []
-    };
-    var ordersTx = await bc.bcObj.querySmartContract(ctx, contractID, version, myArgs);
-
-    //prints all orders as json
-    var ordersString = ordersTx[0].status.result.toString('utf8')
-    var ordersJSON = JSON.parse(ordersString);
-
-    console.log(ordersJSON);
-
-    // Replicate buy orders that have been stored on blockchain
-    await asyncForEach(buyTimestamps, async (element) => {
-        let hashMe = symbol + quantity +  price +  "0" +  element + "true" + "false" + myHin.toString();
-        //console.log(hashMe);
-        let myArgs = {
-            chaincodeFunction: 'getHashCode',
-            chaincodeArguments: [hashMe]
-        };
-        let hashCodeTx = await bc.bcObj.querySmartContract(ctx, contractID, version, myArgs);
-        let myHash = hashCodeTx[0].status.result.toString('utf8')
-
-        for (let i = 0; i < ordersJSON.length; i++){
-            if (ordersJSON[i].hash == myHash) {
-                let orderObject = {
-                    "orderId": i,
-                    "hash": myHash,
-                    "symbol": symbol,
-                    "quantity": quantity,
-                    "price": price,
-                    "method": "0",
-                    "timestamp": element,
-                    "valid": "true",
-                    "processed": "false",
-                    "traderHin": myHin.toString()
-                }
-                buyOrders.push(orderObject);
-                //console.log(`${myHash}: ${hashMe}`);
-            }
-        }
-    });
-    console.log(buyOrders);
-
     const buyStream = fs.createWriteStream('buytimestamps.txt');
     const buyPath = buyStream.path;
 
@@ -135,7 +103,7 @@ module.exports.end = async function() {
         console.error(`There is an error writing the file ${buyPath} => ${err}`)
     });
     // close the stream
-    buyStream.end();*/
+    buyStream.end();
 
     return Promise.resolve();
 };

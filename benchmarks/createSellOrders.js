@@ -16,14 +16,24 @@ var sellTimestamps = [];
 
 var sellOrders = [];
 
+var orderId = 0;
+
+var myHin;
+
 module.exports.init = async function(blockchain, context, args) {
     bc = blockchain;
     ctx = context;
     clientArgs = args;
     //clientIdx = context.clientIdx.toString();
-
-    sleep(5000);
-
+    var myArgs = {
+        verb: 'getMyAddress',
+        args: []
+    };
+	var hinTx = await bc.querySmartContract(ctx, contractID, version, myArgs);
+	console.log(hinTx);
+	var hin = hinTx[0].status.result.toString('utf8');
+	console.log(hin);
+	myHin = hin;
     return Promise.resolve();
 };
 
@@ -47,14 +57,23 @@ module.exports.run = function() {
 
     var myArgs = {
         verb: 'createOrder',
-        args: ['1', symbol, quantity, price, sellTimestamp]
+        args: ["KS"+orderId.toString(), '1', symbol, quantity, price, sellTimestamp]
     };
+	let orderObject = {
+                    "orderId": "KS"+orderId.toString(),
+                    "symbol": symbol,
+                    "quantity": quantity,
+                    "price": price,
+                    "method": "1",
+                    "timestamp": sellTimestamp,
+                    "valid": "true",
+                    "processed": "false",
+                    "traderHin": myHin
+    };
+	sellOrders.push(orderObject);
     try {
-        //console.log(`${clientIdx} SELLING ${quantity} ${symbol}@${price}€`);
+		orderId++;
         return bc.invokeSmartContract(ctx, contractID, version, myArgs);
-        /*console.log("Sleeeping");
-        sleep(3000);
-        console.log("Woke up!");*/
     } catch (error) {
         return console.log(`SELLORDER ${error}`);
     }
@@ -67,63 +86,6 @@ async function asyncForEach(array, callback) {
 }
 
 module.exports.end = async function() {
-    /*const symbol = clientArgs.symbol;
-
-    const quantity = clientArgs.quantity;
-    const price = clientArgs.price;
-
-    //get traderHin
-    var myArgs = {
-        chaincodeFunction: 'getMyHin',
-        chaincodeArguments: []
-    };
-    var myHinTx = await bc.bcObj.querySmartContract(ctx, contractID, version, myArgs);
-    var myHin = myHinTx[0].status.result.toString('utf8')
-    console.log(myHin);
-
-    var myArgs = {
-        chaincodeFunction: 'getAllOrders',
-        chaincodeArguments: []
-    };
-    var ordersTx = await bc.bcObj.querySmartContract(ctx, contractID, version, myArgs);
-
-    //prints all orders as json
-    var ordersString = ordersTx[0].status.result.toString('utf8')
-    var ordersJSON = JSON.parse(ordersString);
-
-    console.log(ordersJSON);
-
-    // Replicate sell orders that have been stored on blockchain
-    await asyncForEach(sellTimestamps, async (element) => {
-        let hashMe = symbol + quantity +  price +  "1" +  element + "true" + "false" + myHin.toString();
-        //console.log(hashMe);
-        let myArgs = {
-            chaincodeFunction: 'getHashCode',
-            chaincodeArguments: [hashMe]
-        };
-        let hashCodeTx = await bc.bcObj.querySmartContract(ctx, contractID, version, myArgs);
-        let myHash = hashCodeTx[0].status.result.toString('utf8')
-
-        for (let i = 0; i < ordersJSON.length; i++){
-            if (ordersJSON[i].hash == myHash) {
-                let orderObject = {
-                    "orderId": i,
-                    "hash": myHash,
-                    "symbol": symbol,
-                    "quantity": quantity,
-                    "price": price,
-                    "method": "1",
-                    "timestamp": element,
-                    "valid": "true",
-                    "processed": "false",
-                    "traderHin": myHin.toString()
-                }
-                sellOrders.push(orderObject);
-                //console.log(`${myHash}: ${hashMe}`);
-            }
-        }
-    });
-
     const sellStream = fs.createWriteStream('selltimestamps.txt');
     const sellPath = sellStream.path;
 
@@ -134,7 +96,7 @@ module.exports.end = async function() {
     sellStream.on('error', (err) => {
         console.error(`There is an error writing the file ${sellPath} => ${err}`)
     });
-    sellStream.end();*/
+    sellStream.end();
 
     return Promise.resolve();
 };

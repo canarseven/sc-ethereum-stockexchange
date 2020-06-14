@@ -22,6 +22,7 @@
   "homepage": "https://github.com/canarseven/sc-ethereum-stockexchange#readme",
   "dependencies": {
     "@hyperledger/caliper-cli": "^0.3.0",
-    "web3": "^1.2.0"
+    "web3": "^1.2.0",
+    "@truffle/hdwallet-provider": "^1.0.35"
   }
 }

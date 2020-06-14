@@ -12,16 +12,17 @@ contract StockExchangeV2 {
 
     mapping (string => Security) tradableStocks;
 
-    event CreatedOrder(uint id, uint timestamp, address owner, uint8 method, string symbol, uint amount, uint price);
-    event SettledOrder(uint buyID, uint sellID);
+    event CreatedOrder(string id, uint timestamp, address owner, uint8 method, string symbol, uint amount, uint price);
+    event SettledOrder(string buyID, string sellID);
     event CreatedTrader(address traderadress);
     event CreatedStock(uint totalAmount, string name, string symbol);
-    event InvalidatedOrder(uint id);
+    event InvalidatedOrder(string id);
 
     event TestEvent(bytes32 createHash, bytes32 settleHash);
 
     struct trader {
         address hin;
+        uint balance;
         bool isMember;
     }
 
@@ -29,12 +30,11 @@ contract StockExchangeV2 {
 
     mapping (string => uint) mappedPrice;
 
-    bytes32[] public allOrders;
+    mapping (string => bytes32) allOrders;
 
 
     constructor() public{
         owner = msg.sender;
-        orderID = 0;
     }
 
 
@@ -42,6 +42,7 @@ contract StockExchangeV2 {
         trader storage myTrader = traders[msg.sender];
         myTrader.hin = msg.sender;
         myTrader.isMember = true;
+        myTrader.balance = 10000;
 
         emit CreatedTrader(myTrader.hin);
     }
@@ -57,39 +58,46 @@ contract StockExchangeV2 {
     }
 
     //0 = "BUY", 1 = "SELL"
-    function createOrder(uint8 _method, string memory _symbol, uint _amount, uint _price, uint _timestamp) public {
+    function createOrder(string memory orderId, uint8 _method, string memory _symbol, uint _amount, uint _price, uint _timestamp) public {
         require(traders[msg.sender].isMember == true);
 
         //---------------------------------------(orderID, timestamp, method, symbol, amount, price, valid, settled, owner)
-        allOrders.push(keccak256(abi.encodePacked(orderID, _timestamp, _method, _symbol, _amount, _price, true, false, msg.sender)));
+        allOrders[orderId] = keccak256(abi.encodePacked(orderId, _timestamp, _method, _symbol, _amount, _price, true, false, msg.sender));
 
         //uint _id, uint _timestamp, address _owner, string _method, string _symbol, uint _amount, uint _price
-        emit CreatedOrder(orderID, _timestamp, msg.sender, _method, _symbol, _amount, _price);
-        orderID++;
+        emit CreatedOrder(orderId, _timestamp, msg.sender, _method, _symbol, _amount, _price);
+        //orderID++;
     }
 
 
-    function settleOrder(uint _BUYid, string memory _symbol, uint _amount, uint _BUYtimestamp, uint _SELLid, uint _SELLtimestamp, address payable _SELLowner) payable public {
+    function settleOrder(string memory _BUYid, string memory _symbol, uint totalPrice, uint _amount, uint _BUYtimestamp, string memory _SELLid, uint _SELLtimestamp, address _SELLowner) public {
+        
+        uint price = totalPrice/_amount;
 
-        bytes32 hashedBuy = keccak256(abi.encodePacked(_BUYid, _BUYtimestamp, uint8(0), _symbol, _amount, msg.value/_amount, true, false, msg.sender));
-        bytes32 hashedSell = keccak256(abi.encodePacked(_SELLid, _SELLtimestamp, uint8(1), _symbol, _amount, msg.value/_amount, true, false, _SELLowner));
-
+        bytes32 hashedBuy = keccak256(abi.encodePacked(_BUYid, _BUYtimestamp, uint8(0), _symbol, _amount, price, true, false, msg.sender));
+        bytes32 hashedSell = keccak256(abi.encodePacked(_SELLid, _SELLtimestamp, uint8(1), _symbol, _amount, price, true, false, _SELLowner));
+        
         require(hashedBuy == allOrders[_BUYid]);
         require(hashedSell == allOrders[_SELLid]);
 
         Security token = tradableStocks[_symbol];
 
-        _SELLowner.transfer(msg.value);
+        trader storage myTrader = traders[msg.sender];
+        myTrader.balance -= totalPrice;
+        require(myTrader.balance >= 0);
+        trader storage seller = traders[_SELLowner];
+        seller.balance += totalPrice;
+        
         require(token.transfer(_SELLowner, msg.sender, _amount) == true);
 
-        allOrders[_BUYid] = keccak256(abi.encodePacked(_BUYid, _BUYtimestamp, uint8(0), _symbol, _amount, msg.value/_amount, true, true, msg.sender));
-        allOrders[_SELLid] = keccak256(abi.encodePacked(_SELLid, _SELLtimestamp, uint8(1), _symbol, _amount, msg.value/_amount, true, true, _SELLowner));
-        mappedPrice[_symbol] = msg.value/_amount;
+        allOrders[_BUYid] = keccak256(abi.encodePacked(_BUYid, _BUYtimestamp, uint8(0), _symbol, _amount, price, true, true, msg.sender));
+        allOrders[_SELLid] = keccak256(abi.encodePacked(_SELLid, _SELLtimestamp, uint8(1), _symbol, _amount, price, true, true, _SELLowner));
+        mappedPrice[_symbol] = totalPrice/_amount;
 
         emit SettledOrder(_BUYid, _SELLid);
     }
 
-    function invalidateOrder(uint orderId, uint8 _method, string memory _symbol, uint _amount, uint _price, uint _timestamp) public {
+    function invalidateOrder(string memory orderId, uint8 _method, string memory _symbol, uint _amount, uint _price, uint _timestamp) public {
         bytes32 hashedOrder = keccak256(abi.encodePacked(orderId, _timestamp, _method, _symbol, _amount, _price, true, false, msg.sender));
         require(hashedOrder == allOrders[orderId]);
 
@@ -112,3 +120,4 @@ contract StockExchangeV2 {
         return msg.sender;
     }
 }
+

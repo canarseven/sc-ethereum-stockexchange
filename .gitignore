@@ -3,3 +3,5 @@ test/.placeholder
 build
 node_modules
 .DS_Store
+buytimestamps.txt
+selltimestamps.txt

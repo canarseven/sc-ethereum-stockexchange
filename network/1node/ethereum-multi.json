@@ -1,0 +1,18 @@
+{
+    "caliper": {
+        "blockchain": "ethereum"
+    },
+    "ethereum": {
+        "url": "http://localhost:8545",
+        "contractDeployerAddress": "0x03666bf59dcaeeeb4650130016a2b78aa5bae561",
+        "contractDeployerAddressPassword": "password",
+        "fromAddress": "0x03666bf59dcaeeeb4650130016a2b78aa5bae561",
+        "fromAddressPassword": "password",
+        "transactionConfirmationBlocks": 2,
+        "contracts": {
+            "ethexchange": {
+                "path": "build/contracts/StockExchangeV2.json"
+            }
+        }
+    }
+}
